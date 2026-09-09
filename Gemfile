@@ -10,3 +10,6 @@ gem "rake", "~> 13.0"
 gem "rspec", "~> 3.0"
 
 gem "rubocop", "~> 1.21"
+
+# Drives the PostgreSQL extractor's integration spec.
+gem "pg", "~> 1.5"

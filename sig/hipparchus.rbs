@@ -1,4 +1,88 @@
 module Hipparchus
   VERSION: String
-  # See the writing guide of rbs: https://github.com/ruby/rbs#guides
+
+  class Error < StandardError
+  end
+
+  class UnsupportedDatabase < Error
+  end
+
+  def self.extract: (connection: untyped, raw_connection: untyped) -> IR::Schema
+
+  # Database-agnostic description of a relational schema.
+  module IR
+    class Schema
+      attr_reader adapter: String
+      attr_reader database: String?
+      attr_reader tables: Array[Table]
+      attr_reader extracted_at: Time
+
+      def self.new: (adapter: String, database: String?, tables: Array[Table], extracted_at: Time) -> Schema
+      def table: (String name) -> Table?
+    end
+
+    class Table
+      attr_reader name: String
+      attr_reader schema: String?
+      attr_reader comment: String?
+      attr_reader columns: Array[Column]
+      attr_reader primary_key: Array[String]
+      attr_reader foreign_keys: Array[ForeignKey]
+      attr_reader indexes: Array[Index]
+
+      def qualified_name: () -> String
+      def column: (String name) -> Column?
+    end
+
+    class Column
+      attr_reader name: String
+      attr_reader type: Symbol
+      attr_reader sql_type: String
+      attr_reader null: bool
+      attr_reader default: String?
+      attr_reader primary_key: bool
+      attr_reader comment: String?
+      attr_reader position: Integer
+    end
+
+    class ForeignKey
+      attr_reader name: String?
+      attr_reader columns: Array[String]
+      attr_reader to_table: String
+      attr_reader to_schema: String?
+      attr_reader primary_key: Array[String]
+      attr_reader on_delete: Symbol?
+      attr_reader on_update: Symbol?
+
+      def qualified_to: () -> String
+    end
+
+    class Index
+      attr_reader name: String
+      attr_reader columns: Array[String]
+      attr_reader unique: bool
+      attr_reader using: String?
+      attr_reader where: String?
+    end
+  end
+
+  # Picks and drives the extractor for a connection.
+  module Extractor
+    REGISTRY: Hash[String, Symbol]
+
+    def self.call: (connection: untyped, raw_connection: untyped) -> IR::Schema
+    def self.for: (untyped connection, untyped raw_connection) -> _Extractor
+
+    interface _Extractor
+      def call: () -> IR::Schema
+    end
+
+    class Base
+      def initialize: (untyped connection, untyped raw_connection) -> void
+      def call: () -> IR::Schema
+    end
+
+    class PostgreSQL < Base
+    end
+  end
 end

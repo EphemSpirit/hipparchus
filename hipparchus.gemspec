@@ -9,10 +9,12 @@ Gem::Specification.new do |spec|
   spec.email = ["languageinvestigator@gmail.com"]
 
   spec.summary = "A gem for creating Entity Relationship Diagrams (ERDs) from a database schema."
-  spec.description = "Takes a database schema and generates an Entity Relationship Diagram (ERD) in various formats, including PNG, SVG, and PDF. Supports multiple database types and allows customization of the generated diagrams."
+  spec.description = "Takes a database schema and generates an Entity Relationship Diagram (ERD) in various " \
+                     "formats, including PNG, SVG, and PDF. Supports multiple database types and allows " \
+                     "customization of the generated diagrams."
   spec.homepage = "https://www.github.com/EphemSpirit/hipparchus"
   spec.license = "MIT"
-  spec.required_ruby_version = ">= 3.0.0"
+  spec.required_ruby_version = ">= 3.2.0"
 
   spec.metadata["allowed_push_host"] = "https://rubygems.org"
 
@@ -33,8 +35,9 @@ Gem::Specification.new do |spec|
   spec.executables = spec.files.grep(%r{\Aexe/}) { |f| File.basename(f) }
   spec.require_paths = ["lib"]
 
-  # Uncomment to register a new dependency of your gem
-  # spec.add_dependency "example-gem", "~> 1.0"
+  # Schema extraction leans on an ActiveRecord connection handed in by the
+  # caller for adapter identification and database metadata.
+  spec.add_dependency "activerecord", ">= 7.0"
 
   # For more information and examples about making a new gem, check out our
   # guide at: https://bundler.io/guides/creating_gem.html
