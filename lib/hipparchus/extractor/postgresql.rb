@@ -19,7 +19,6 @@ module Hipparchus
       # Non-user schemas that are never part of an ERD.
       SYSTEM_SCHEMAS = %w[pg_catalog information_schema pg_toast].freeze
 
-      # PostgreSQL base type name -> normalized logical type.
       LOGICAL_TYPES = {
         "int2" => :integer, "int4" => :integer, "int8" => :integer,
         "numeric" => :decimal, "money" => :decimal,
@@ -36,7 +35,6 @@ module Hipparchus
         "bytea" => :binary
       }.freeze
 
-      # PostgreSQL +confdeltype+ / +confupdtype+ code -> referential action.
       FK_ACTIONS = {
         "a" => :no_action, "r" => :restrict, "c" => :cascade,
         "n" => :nullify, "d" => :set_default

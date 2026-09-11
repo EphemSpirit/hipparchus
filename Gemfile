@@ -11,5 +11,7 @@ gem "rspec", "~> 3.0"
 
 gem "rubocop", "~> 1.21"
 
+gem "dotenv", ">=3.2"
+
 # Drives the PostgreSQL extractor's integration spec.
 gem "pg", "~> 1.5"

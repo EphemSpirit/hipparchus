@@ -11,7 +11,6 @@ module Hipparchus
   # * +raw_connection+ - the underlying driver connection (e.g. +PG::Connection+),
   #   used to run catalog queries directly.
   module Extractor
-    # Maps a downcased ActiveRecord adapter name to an extractor constant.
     REGISTRY = { "postgresql" => :PostgreSQL }.freeze
 
     # Extract in one call.
