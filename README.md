@@ -1,39 +1,93 @@
 # Hipparchus
 
-TODO: Delete this and the text below, and describe your gem
-
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/hipparchus`. To experiment with that code, run `bin/console` for an interactive prompt.
+Hipparchus generates Entity Relationship Diagrams from a live relational
+database. It works in stages; the first is **schema extraction**, which reads the
+database catalog and produces a small, database-agnostic **intermediate
+representation (IR)** that later stages lay out and render.
 
 ## Installation
 
-TODO: Replace `UPDATE_WITH_YOUR_GEM_NAME_IMMEDIATELY_AFTER_RELEASE_TO_RUBYGEMS_ORG` with your gem name right after releasing it to RubyGems.org. Please do not do it earlier due to security reasons. Alternatively, replace this section with instructions to install your gem from git if you don't plan to release to RubyGems.org.
+Add the gem to your application's Gemfile:
 
-Install the gem and add to the application's Gemfile by executing:
+```ruby
+gem "hipparchus"
+```
 
-    $ bundle add UPDATE_WITH_YOUR_GEM_NAME_IMMEDIATELY_AFTER_RELEASE_TO_RUBYGEMS_ORG
-
-If bundler is not being used to manage dependencies, install the gem by executing:
-
-    $ gem install UPDATE_WITH_YOUR_GEM_NAME_IMMEDIATELY_AFTER_RELEASE_TO_RUBYGEMS_ORG
+Then run `bundle install`.
 
 ## Usage
 
-TODO: Write usage instructions here
+You hand Hipparchus two connections and it never opens or closes one itself:
+
+- an **ActiveRecord connection**, used to identify the adapter and read the
+  database name;
+- the **raw driver connection** (e.g. `PG::Connection`), used to run catalog
+  queries directly, so you stay in control of the session those queries run in.
+
+```ruby
+require "active_record"
+require "hipparchus"
+
+ActiveRecord::Base.establish_connection(ENV["DATABASE_URL"])
+connection = ActiveRecord::Base.connection
+
+schema = Hipparchus.extract(
+  connection: connection,
+  raw_connection: connection.raw_connection
+)
+
+schema.tables.each do |table|
+  puts table.qualified_name
+  table.foreign_keys.each do |fk|
+    puts "  #{fk.columns.join(', ')} -> #{fk.qualified_to} (#{fk.primary_key.join(', ')})"
+  end
+end
+```
+
+### The intermediate representation
+
+`Hipparchus::IR` holds immutable value objects:
+
+| Object       | Notable fields                                                             |
+| ------------ | ------------------------------------------------------------------------- |
+| `Schema`     | `adapter`, `database`, `tables`, `extracted_at`                          |
+| `Table`      | `name`, `schema`, `comment`, `columns`, `primary_key`, `foreign_keys`, `indexes` |
+| `Column`     | `name`, `type` (normalized), `sql_type` (raw), `null`, `default`, `primary_key`, `comment`, `position` |
+| `ForeignKey` | `columns`, `to_table`, `to_schema`, `primary_key`, `on_delete`, `on_update` |
+| `Index`      | `name`, `columns`, `unique`, `using`, `where`                            |
+
+`primary_key`, and a foreign key's `columns` / `primary_key`, are ordered arrays,
+so composite keys are represented faithfully.
+
+### The extractor interface
+
+Each extractor is constructed with the two connections and exposes exactly one
+method, `#call`, returning a `Hipparchus::IR::Schema`:
+
+```ruby
+Hipparchus::Extractor.for(connection, connection.raw_connection).call
+```
+
+`Hipparchus::Extractor.for` raises `Hipparchus::UnsupportedDatabase` for an
+adapter that has no extractor yet. PostgreSQL is currently the only one
+implemented.
 
 ## Development
 
-After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake spec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
+After checking out the repo, run `bin/setup` to install dependencies. Then run
+`bundle exec rspec` to run the tests and `bundle exec rubocop` to lint.
 
-To install this gem onto your local machine, run `bundle exec rake install`. To release a new version, update the version number in `version.rb`, and then run `bundle exec rake release`, which will create a git tag for the version, push git commits and the created tag, and push the `.gem` file to [rubygems.org](https://rubygems.org).
+The PostgreSQL extractor spec needs a database. Point it at one with
+`HIPPARCHUS_TEST_DATABASE_URL` (e.g.
+`postgres://postgres:postgres@localhost:5432/postgres`); without it that spec
+skips itself.
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/hipparchus. This project is intended to be a safe, welcoming space for collaboration, and contributors are expected to adhere to the [code of conduct](https://github.com/[USERNAME]/hipparchus/blob/main/CODE_OF_CONDUCT.md).
+Bug reports and pull requests are welcome on GitHub at
+https://github.com/EphemSpirit/hipparchus.
 
 ## License
 
-The gem is available as open source under the terms of the [MIT License](https://opensource.org/licenses/MIT).
-
-## Code of Conduct
-
-Everyone interacting in the Hipparchus project's codebases, issue trackers, chat rooms and mailing lists is expected to follow the [code of conduct](https://github.com/[USERNAME]/hipparchus/blob/main/CODE_OF_CONDUCT.md).
+The gem is available as open source under the terms of the
+[MIT License](https://opensource.org/licenses/MIT).

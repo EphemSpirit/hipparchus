@@ -1,8 +1,28 @@
 AllCops:
-  TargetRubyVersion: 3.0
+  TargetRubyVersion: 3.2
+  NewCops: disable
 
 Style/StringLiterals:
   EnforcedStyle: double_quotes
 
 Style/StringLiteralsInInterpolation:
   EnforcedStyle: double_quotes
+
+Metrics/MethodLength:
+  CountAsOne: ["array", "hash", "heredoc"]
+  Max: 20
+
+Metrics/AbcSize:
+  Max: 30
+
+Metrics/ClassLength:
+  CountAsOne: ["array", "hash", "heredoc"]
+
+Metrics/CyclomaticComplexity:
+  Max: 10
+
+Metrics/BlockLength:
+  CountAsOne: ["array", "hash", "heredoc"]
+  Exclude:
+    - "spec/**/*"
+    - "**/*.gemspec"
